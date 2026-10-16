@@ -76,16 +76,10 @@ class ArCoreUtils {
                     // Return only camera configs that will not use the depth sensor.
                     filter.setDepthSensorUsage(EnumSet.of(CameraConfig.DepthSensorUsage.DO_NOT_USE))
 
-                    // Get list of configs that match filter settings.
-                    // In this case, this list is guaranteed to contain at least one element,
-                    // because both TargetFps.TARGET_FPS_30 and DepthSensorUsage.DO_NOT_USE
-                    // are supported on all ARCore supported devices.
                     val cameraConfigList = it.getSupportedCameraConfigs(filter)
-
-                    // Use element 0 from the list of returned camera configs. This is because
-                    // it contains the camera config that best matches the specified filter
-                    // settings.
-                    it.cameraConfig = cameraConfigList[0]
+                    if (cameraConfigList.isNotEmpty()) {
+                        it.cameraConfig = cameraConfigList[0]
+                    }
                 }
 
             }

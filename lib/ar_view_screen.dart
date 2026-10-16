@@ -96,6 +96,11 @@ class _ArEarthMapScreenState extends State<ArEarthMapScreen> {
     controller.onError = null;
     controller.onPlaneDetected = null;
     controller.onTrackingImage = null;
+    try {
+      controller.dispose();
+    } catch (e) {
+      debugPrint('AR controller dispose failed: $e');
+    }
     _arController = null;
   }
 
@@ -105,6 +110,11 @@ class _ArEarthMapScreenState extends State<ArEarthMapScreen> {
     _isClosing = true;
     _detachArController();
     return true;
+  }
+
+  void _startArSession() {
+    if (_isClosing) return;
+    setState(() => _showInstructions = false);
   }
 
   @override
@@ -139,12 +149,14 @@ class _ArEarthMapScreenState extends State<ArEarthMapScreen> {
               )
             : Stack(
                 children: [
-                  if (!_isClosing)
+                  if (!_isClosing && !_showInstructions && !_isLoading)
                     ArCoreView(
                       onArCoreViewCreated: _onArViewCreated,
                       enablePlaneRenderer: true,
                       enableTapRecognizer: true,
-                    ),
+                    )
+                  else
+                    const ColoredBox(color: Colors.black),
                   if (_isLoading)
                     Container(
                       color: Colors.black.withValues(alpha: 0.45),
@@ -168,7 +180,7 @@ class _ArEarthMapScreenState extends State<ArEarthMapScreen> {
                   else if (_showInstructions)
                     _InstructionsOverlay(
                       modelName: _modelEntry!.displayName,
-                      onStart: () => setState(() => _showInstructions = false),
+                      onStart: _startArSession,
                     )
                   else if (!_isPlaced)
                     Positioned(

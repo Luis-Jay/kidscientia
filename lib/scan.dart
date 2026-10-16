@@ -123,6 +123,8 @@ class _ScanScreenState extends State<ScanScreen>
     } catch (e) {
       debugPrint('Scanner dispose failed: $e');
     }
+
+    await Future<void>.delayed(const Duration(milliseconds: 400));
   }
 
   Future<void> _stopScanner(MobileScannerController controller) async {

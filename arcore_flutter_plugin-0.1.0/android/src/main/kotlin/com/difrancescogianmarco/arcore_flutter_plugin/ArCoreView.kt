@@ -18,6 +18,7 @@ import com.difrancescogianmarco.arcore_flutter_plugin.models.RotatingNode
 import com.difrancescogianmarco.arcore_flutter_plugin.utils.ArCoreUtils
 import com.google.ar.core.*
 import com.google.ar.core.exceptions.CameraNotAvailableException
+import com.google.ar.core.exceptions.FatalException
 import com.google.ar.core.exceptions.UnavailableException
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException
 import com.google.ar.sceneform.*
@@ -517,7 +518,7 @@ class ArCoreView(val activity: Activity, context: Context, messenger: BinaryMess
     }
 
     override fun getView(): View {
-        return arSceneView as View
+        return arSceneView ?: View(activity)
     }
 
     override fun dispose() {
@@ -588,17 +589,34 @@ class ArCoreView(val activity: Activity, context: Context, messenger: BinaryMess
             }
         }
 
-        try {
-            arSceneView?.resume()
-        } catch (ex: CameraNotAvailableException) {
-            ArCoreUtils.displayError(activity, "Unable to get camera", ex)
-            activity.finish()
-            return
-        }
+        resumeArSceneViewWithRetry()
 
         if (arSceneView?.session != null) {
             //arSceneView!!.planeRenderer.isVisible = false
             debugLog("Searching for surfaces")
+        }
+    }
+
+    private fun resumeArSceneViewWithRetry(attempt: Int = 0) {
+        if (isDisposed || arSceneView == null) {
+            return
+        }
+
+        try {
+            arSceneView?.resume()
+        } catch (ex: CameraNotAvailableException) {
+            if (attempt < 5) {
+                debugLog("Camera not available, retry ${attempt + 1}/5")
+                Handler(activity.mainLooper).postDelayed({
+                    resumeArSceneViewWithRetry(attempt + 1)
+                }, 300L)
+            } else {
+                ArCoreUtils.displayError(activity, "Unable to get camera", ex)
+                methodChannel.invokeMethod("onError", "Unable to get camera: ${ex.message}")
+            }
+        } catch (ex: FatalException) {
+            ArCoreUtils.displayError(activity, "AR session failed to start", ex)
+            methodChannel.invokeMethod("onError", "AR session failed: ${ex.message}")
         }
     }
 
