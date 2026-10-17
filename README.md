@@ -2,6 +2,15 @@
 
 A new Flutter project.
 
+## Android builds
+
+The Android build uses Gradle 9.1.0 with a JDK 25 daemon. Install JDK 25
+in a location Gradle discovers, such as your user `.jdks` directory. The
+project pins the daemon version in `android/gradle/gradle-daemon-jvm.properties`.
+Java and Kotlin compilation targets remain unchanged for Android compatibility.
+
+Build the release APK with `flutter build apk --release`.
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
